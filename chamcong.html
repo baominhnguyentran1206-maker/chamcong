@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Chấm Công Kho</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { -webkit-tap-highlight-color: transparent; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #f0f0f0;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0 0 2rem;
+  }
+  .app { width: 100%; max-width: 430px; }
+
+  /* HEADER */
+  .header {
+    background: #1a1a2e;
+    padding: 1.5rem 1.25rem 1.25rem;
+    border-radius: 0 0 24px 24px;
+    margin-bottom: 1.5rem;
+  }
+  .header-top { display: flex; align-items: center; gap: 10px; margin-bottom: 1rem; }
+  .logo {
+    width: 36px; height: 36px;
+    background: #e8ff6b;
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .logo svg { width: 20px; height: 20px; }
+  .brand-name { font-size: 18px; font-weight: 600; color: #fff; letter-spacing: -0.3px; }
+  .brand-ver { font-size: 11px; color: rgba(255,255,255,0.4); margin-top: 1px; }
+  .time-display {
+    display: flex; align-items: center;
+    background: rgba(255,255,255,0.07);
+    border-radius: 12px;
+    padding: 10px 14px;
+    gap: 10px;
+  }
+  .clock { font-size: 28px; font-weight: 600; color: #e8ff6b; font-variant-numeric: tabular-nums; letter-spacing: -1px; }
+  .date-info { margin-left: auto; text-align: right; }
+  .date-day { font-size: 13px; color: rgba(255,255,255,0.9); font-weight: 500; }
+  .date-full { font-size: 11px; color: rgba(255,255,255,0.4); margin-top: 2px; }
+
+  /* BODY */
+  .form-wrap { padding: 0 1rem; display: flex; flex-direction: column; gap: 12px; }
+
+  /* SECTION */
+  .section-title {
+    font-size: 10px; font-weight: 600;
+    color: #888; letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: -4px;
+    padding-left: 2px;
+  }
+
+  /* FIELD */
+  .field { display: flex; flex-direction: column; gap: 6px; }
+  .field label { font-size: 13px; font-weight: 500; color: #444; }
+  .field input, .field select, .field textarea {
+    width: 100%;
+    height: 48px;
+    padding: 0 14px;
+    border: 1.5px solid #e0e0e0;
+    border-radius: 12px;
+    font-size: 15px;
+    background: #fff;
+    color: #1a1a1a;
+    font-family: inherit;
+    transition: border-color 0.15s, box-shadow 0.15s;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+  .field select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23888' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    padding-right: 36px;
+  }
+  .field input:focus, .field select:focus, .field textarea:focus {
+    outline: none;
+    border-color: #534AB7;
+    box-shadow: 0 0 0 3px rgba(83,74,183,0.12);
+  }
+  .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+  /* SHIFT TOGGLE */
+  .shift-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .shift-btn {
+    padding: 12px 8px;
+    border: 1.5px solid #e0e0e0;
+    border-radius: 12px;
+    background: #fff;
+    font-size: 14px;
+    font-weight: 500;
+    color: #666;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.15s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .shift-btn.active {
+    background: #1a1a2e;
+    color: #e8ff6b;
+    border-color: #1a1a2e;
+  }
+  .shift-btn:active { transform: scale(0.97); }
+
+  /* DIVIDER */
+  .divider { height: 1px; background: #e8e8e8; margin: 4px 0; }
+
+  /* SUBMIT */
+  .submit-btn {
+    width: 100%; height: 52px;
+    background: #1a1a2e;
+    color: #e8ff6b;
+    border: none;
+    border-radius: 14px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    letter-spacing: -0.2px;
+    transition: opacity 0.15s, transform 0.1s;
+    margin-top: 4px;
+  }
+  .submit-btn:active { transform: scale(0.98); opacity: 0.9; }
+  .submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  /* ERROR */
+  .error-msg {
+    font-size: 13px; color: #a32d2d;
+    background: #fcebeb;
+    border-radius: 10px;
+    padding: 10px 14px;
+    display: none;
+    line-height: 1.5;
+  }
+  .error-msg.show { display: block; }
+
+  /* LOADING */
+  .loading-row {
+    display: none; align-items: center; justify-content: center;
+    gap: 10px; font-size: 14px; color: #666; padding: 8px;
+  }
+  .loading-row.show { display: flex; }
+  .spinner {
+    width: 18px; height: 18px;
+    border: 2px solid #ddd;
+    border-top-color: #534AB7;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    flex-shrink: 0;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* SUCCESS */
+  .success-screen {
+    display: none; flex-direction: column; gap: 10px;
+    padding: 0 1rem;
+  }
+  .success-screen.show { display: flex; }
+  .success-card {
+    background: #fff;
+    border-radius: 16px;
+    border: 1.5px solid #c0dd97;
+    overflow: hidden;
+  }
+  .success-header {
+    background: #eaf3de;
+    padding: 1rem 1.25rem;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .success-icon {
+    width: 40px; height: 40px;
+    background: #639922;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .success-title { font-size: 15px; font-weight: 600; color: #27500A; }
+  .success-sub { font-size: 12px; color: #3b6d11; margin-top: 2px; }
+  .detail-rows { padding: 0.75rem 1.25rem; }
+  .detail-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid #f0f0f0;
+    font-size: 14px;
+  }
+  .detail-row:last-child { border-bottom: none; }
+  .detail-label { color: #888; }
+  .detail-val { font-weight: 500; color: #1a1a1a; text-align: right; max-width: 60%; }
+  .reset-btn {
+    width: 100%; height: 48px;
+    background: transparent;
+    border: 1.5px solid #c0dd97;
+    border-radius: 14px;
+    color: #3b6d11;
+    font-size: 15px; font-weight: 500;
+    cursor: pointer; font-family: inherit;
+    transition: background 0.15s;
+  }
+  .reset-btn:active { background: #eaf3de; }
+
+  /* CONFIG BAR */
+  .cfg-bar {
+    display: flex; align-items: center; gap: 8px;
+    background: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 10px;
+    padding: 8px 12px;
+    margin: 0 1rem 1rem;
+  }
+  .cfg-dot { width: 8px; height: 8px; border-radius: 50%; background: #ddd; flex-shrink: 0; transition: background 0.2s; }
+  .cfg-dot.ok { background: #639922; }
+  .cfg-dot.err { background: #e24b4a; }
+  .cfg-input {
+    flex: 1; border: none; background: transparent;
+    font-size: 12px; color: #555; font-family: inherit;
+    min-width: 0;
+  }
+  .cfg-input:focus { outline: none; }
+  .cfg-input::placeholder { color: #bbb; }
+  .cfg-label { font-size: 10px; color: #aaa; flex-shrink: 0; }
+
+  /* INSTRUCTION */
+  .instruction {
+    background: #fff;
+    border-radius: 14px;
+    padding: 1rem 1.25rem;
+    margin: 0 1rem;
+    border: 1px solid #e0e0e0;
+  }
+  .instruction h3 { font-size: 13px; font-weight: 600; color: #1a1a2e; margin-bottom: 10px; }
+  .step { display: flex; gap: 10px; margin-bottom: 10px; }
+  .step-num {
+    width: 22px; height: 22px; border-radius: 50%;
+    background: #1a1a2e; color: #e8ff6b;
+    font-size: 11px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; margin-top: 1px;
+  }
+  .step-text { font-size: 12px; color: #555; line-height: 1.6; }
+  .step-text code {
+    background: #f0f0f0; padding: 1px 5px; border-radius: 4px;
+    font-size: 11px; color: #1a1a2e; font-family: monospace;
+  }
+  .toggle-instruction {
+    width: 100%; background: transparent; border: none;
+    font-size: 12px; color: #888; cursor: pointer;
+    padding: 4px 0; font-family: inherit;
+    text-decoration: underline;
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="header-top">
+      <div class="logo">
+        <svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="10" cy="10" r="8" stroke="#1a1a2e" stroke-width="2"/>
+          <path d="M10 5.5v5l3 3" stroke="#1a1a2e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div>
+        <div class="brand-name">Chấm Công Kho</div>
+        <div class="brand-ver">Timekeeper v1.0</div>
+      </div>
+    </div>
+    <div class="time-display">
+      <div class="clock" id="clock">00:00:00</div>
+      <div class="date-info">
+        <div class="date-day" id="weekday">--</div>
+        <div class="date-full" id="date-full">-- / -- / ----</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- URL Apps Script được cài cứng bởi quản trị viên — NV không thấy ô này -->
+  <div class="cfg-bar" id="cfg-bar" style="display:none;">
+    <div class="cfg-dot err"></div>
+    <span style="font-size:12px; color:#a32d2d;">Chưa cài URL — liên hệ quản trị viên.</span>
+  </div>
+
+  <!-- MAIN FORM -->
+  <div class="form-wrap" id="main-form">
+    <div class="section-title">Thông tin nhân viên</div>
+
+    <div class="field">
+      <label>Họ và tên <span style="color:#e24b4a">*</span></label>
+      <input type="text" id="name" placeholder="Nguyễn Văn A" autocomplete="name" />
+    </div>
+
+    <div class="field">
+      <label>Mã nhân viên (ID) <span style="color:#e24b4a">*</span></label>
+      <input type="text" id="emp-id" placeholder="NV001" autocomplete="off" />
+    </div>
+
+    <div class="field">
+      <label>Kho làm việc <span style="color:#e24b4a">*</span></label>
+      <select id="warehouse">
+        <option value="">-- Chọn kho --</option>
+        <option>Kho A - Bình Dương</option>
+        <option>Kho B - Long An</option>
+        <option>Kho C - Đồng Nai</option>
+        <option>Kho D - TP.HCM</option>
+      </select>
+    </div>
+
+    <div class="divider"></div>
+    <div class="section-title">Thông tin ca làm việc</div>
+
+    <div class="field">
+      <label>Loại chấm công <span style="color:#e24b4a">*</span></label>
+      <div class="shift-grid">
+        <div class="shift-btn active" data-val="Vào ca" onclick="selectShift(this)">▶ Vào ca</div>
+        <div class="shift-btn" data-val="Ra ca" onclick="selectShift(this)">◀ Ra ca</div>
+      </div>
+    </div>
+
+    <div class="row-2">
+      <div class="field">
+        <label>Giờ chấm công <span style="color:#e24b4a">*</span></label>
+        <input type="time" id="check-time" />
+      </div>
+      <div class="field">
+        <label>Ngày làm việc <span style="color:#e24b4a">*</span></label>
+        <input type="date" id="work-date" />
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Ghi chú (tuỳ chọn)</label>
+      <input type="text" id="note" placeholder="OT, đi muộn, về sớm, lý do..." />
+    </div>
+
+    <div class="error-msg" id="err-msg"></div>
+    <div class="loading-row" id="loading">
+      <div class="spinner"></div>
+      Đang ghi vào Google Sheets...
+    </div>
+
+    <button class="submit-btn" id="submit-btn" onclick="submitForm()">
+      Nộp chấm công ✓
+    </button>
+
+    <button class="toggle-instruction" onclick="toggleInstruction()">
+      Hướng dẫn cài đặt Apps Script
+    </button>
+  </div>
+
+  <!-- INSTRUCTION (hidden by default) -->
+  <div class="instruction" id="instruction" style="display:none; margin-top: 0.5rem;">
+    <h3>⚙️ Cài đặt Google Apps Script (5 phút)</h3>
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-text">Tạo Google Sheets mới. Hàng 1 đặt tiêu đề: <code>Timestamp | Tên | Mã NV | Kho | Loại ca | Giờ | Ngày | Ghi chú</code></div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-text">Vào <b>Extensions → Apps Script</b>, xoá code cũ, dán code từ file <code>apps-script.js</code> đi kèm.</div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-text">Nhấn <b>Deploy → New deployment → Web App</b>. Chọn <i>Execute as: Me</i> và <i>Who has access: Anyone</i>. Copy URL.</div>
+    </div>
+    <div class="step">
+      <div class="step-num">4</div>
+      <div class="step-text">Dán URL vào ô <b>API</b> phía trên. Dấu chấm sẽ chuyển xanh = kết nối OK.</div>
+    </div>
+    <div class="step">
+      <div class="step-num">5</div>
+      <div class="step-text">Tạo QR code từ link file HTML này (host trên GitHub Pages, Netlify, hoặc Google Drive). In dán tại cổng kho.</div>
+    </div>
+  </div>
+
+  <!-- SUCCESS SCREEN -->
+  <div class="success-screen" id="success-screen">
+    <div class="success-card">
+      <div class="success-header">
+        <div class="success-icon">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+            <path d="M4 10l5 5 8-8" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div>
+          <div class="success-title">Chấm công thành công!</div>
+          <div class="success-sub" id="success-sub">Dữ liệu đã ghi vào Google Sheets</div>
+        </div>
+      </div>
+      <div class="detail-rows" id="detail-rows"></div>
+    </div>
+    <button class="reset-btn" onclick="resetForm()">+ Chấm công lần khác</button>
+  </div>
+
+</div>
+
+<script>
+/* ── CLOCK ── */
+function pad(n){ return String(n).padStart(2,'0'); }
+const DAYS = ['Chủ nhật','Thứ hai','Thứ ba','Thứ tư','Thứ năm','Thứ sáu','Thứ bảy'];
+
+function updateClock(){
+  const n = new Date();
+  document.getElementById('clock').textContent = pad(n.getHours())+':'+pad(n.getMinutes())+':'+pad(n.getSeconds());
+  document.getElementById('weekday').textContent = DAYS[n.getDay()];
+  document.getElementById('date-full').textContent = pad(n.getDate())+' / '+pad(n.getMonth()+1)+' / '+n.getFullYear();
+}
+updateClock(); setInterval(updateClock, 1000);
+
+/* ── DEFAULT DATE/TIME + LOCK BACKDATE ── */
+function todayStr(){
+  const n = new Date();
+  return n.getFullYear()+'-'+pad(n.getMonth()+1)+'-'+pad(n.getDate());
+}
+
+function setDefaults(){
+  const n = new Date();
+  const dateInput = document.getElementById('work-date');
+  const today = todayStr();
+  document.getElementById('check-time').value = pad(n.getHours())+':'+pad(n.getMinutes());
+  dateInput.value = today;
+  dateInput.min   = today;   // chặn picker không cho chọn ngày trước hôm nay
+  dateInput.max   = today;   // chặn luôn ngày tương lai nếu cần
+}
+setDefaults();
+
+/* Cập nhật min/max mỗi nửa đêm (phòng trường hợp form mở qua đêm) */
+setInterval(() => {
+  const today = todayStr();
+  const dateInput = document.getElementById('work-date');
+  dateInput.min = today;
+  dateInput.max = today;
+  if(dateInput.value !== today) dateInput.value = today;
+}, 60 * 1000);
+
+/* ── APPS SCRIPT URL — cài cứng bởi quản trị viên ── */
+// ⬇⬇⬇ DÁN URL APPS SCRIPT CỦA BẠN VÀO ĐÂY ⬇⬇⬇
+const APPS_SCRIPT_URL = 'PASTE_YOUR_APPS_SCRIPT_URL_HERE';
+// ⬆⬆⬆ CHỈ SỬA DÒNG TRÊN, KHÔNG SỬA GÌ KHÁC ⬆⬆⬆
+
+function validateUrl(v){
+  return v && v.startsWith('https://script.google.com');
+}
+
+/* ── SHIFT TOGGLE ── */
+let selectedShift = 'Vào ca';
+function selectShift(el){
+  document.querySelectorAll('.shift-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  selectedShift = el.dataset.val;
+}
+
+/* ── INSTRUCTION TOGGLE ── */
+function toggleInstruction(){
+  const el = document.getElementById('instruction');
+  el.style.display = el.style.display === 'none' ? 'block' : 'none';
+}
+
+/* ── SUBMIT ── */
+async function submitForm(){
+  document.getElementById('err-msg').classList.remove('show');
+
+  const name      = document.getElementById('name').value.trim();
+  const empId     = document.getElementById('emp-id').value.trim();
+  const warehouse = document.getElementById('warehouse').value;
+  const time      = document.getElementById('check-time').value;
+  const date      = document.getElementById('work-date').value;
+  const note      = document.getElementById('note').value.trim();
+  const scriptUrl = APPS_SCRIPT_URL;
+
+  /* Validate */
+  if(!name || !empId || !warehouse || !time || !date){
+    showErr('Vui lòng điền đầy đủ các trường bắt buộc (*).');
+    return;
+  }
+
+  /* Chặn backdate — so sánh chuỗi YYYY-MM-DD là đủ chính xác */
+  if(date < todayStr()){
+    showErr('Không được chấm công cho ngày đã qua. Vui lòng chọn đúng ngày hôm nay (' + pad(new Date().getDate()) + '/' + pad(new Date().getMonth()+1) + '/' + new Date().getFullYear() + ').');
+    document.getElementById('work-date').value = todayStr();
+    return;
+  }
+
+  if(!validateUrl(scriptUrl)){
+    showErr('Chưa có URL Apps Script hợp lệ. Dán URL vào ô API phía trên và thử lại.');
+    return;
+  }
+
+  const [y,m,d] = date.split('-');
+  const dateVN = d+'/'+m+'/'+y;
+  const now = new Date();
+
+  setLoading(true);
+
+  const payload = {
+    timestamp : now.toLocaleString('vi-VN'),
+    name, empId, warehouse,
+    shiftType : selectedShift,
+    time, date: dateVN, note
+  };
+
+  try {
+    await fetch(scriptUrl, {
+      method  : 'POST',
+      mode    : 'no-cors',
+      headers : { 'Content-Type': 'application/json' },
+      body    : JSON.stringify(payload)
+    });
+    showSuccess(payload);
+  } catch(err){
+    setLoading(false);
+    showErr('Lỗi kết nối. Kiểm tra URL Apps Script và kết nối mạng, rồi thử lại.');
+  }
+}
+
+function setLoading(on){
+  document.getElementById('loading').classList.toggle('show', on);
+  document.getElementById('submit-btn').disabled = on;
+}
+
+function showErr(msg){
+  const el = document.getElementById('err-msg');
+  el.textContent = msg;
+  el.classList.add('show');
+  setLoading(false);
+}
+
+function showSuccess(p){
+  setLoading(false);
+  document.getElementById('main-form').style.display = 'none';
+  /* cfg-bar đã ẩn sẵn */
+
+  const rows = [
+    ['Nhân viên', p.name],
+    ['Mã NV',     p.empId],
+    ['Kho',       p.warehouse],
+    ['Loại ca',   p.shiftType],
+    ['Giờ',       p.time],
+    ['Ngày',      p.date],
+  ];
+  if(p.note) rows.push(['Ghi chú', p.note]);
+  rows.push(['Ghi lúc', p.timestamp]);
+
+  document.getElementById('detail-rows').innerHTML = rows.map(([l,v]) =>
+    `<div class="detail-row"><span class="detail-label">${l}</span><span class="detail-val">${v}</span></div>`
+  ).join('');
+
+  document.getElementById('success-screen').classList.add('show');
+}
+
+function resetForm(){
+  document.getElementById('name').value = '';
+  document.getElementById('emp-id').value = '';
+  document.getElementById('warehouse').value = '';
+  document.getElementById('note').value = '';
+  document.getElementById('err-msg').classList.remove('show');
+  setDefaults();
+
+  selectedShift = 'Vào ca';
+  document.querySelectorAll('.shift-btn').forEach((b,i) => b.classList.toggle('active', i===0));
+
+  document.getElementById('submit-btn').disabled = false;
+  document.getElementById('success-screen').classList.remove('show');
+  document.getElementById('main-form').style.display = '';
+  /* cfg-bar đã ẩn sẵn */
+}
+</script>
+</body>
+</html>
